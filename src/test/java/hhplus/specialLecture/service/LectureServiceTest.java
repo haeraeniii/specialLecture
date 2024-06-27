@@ -3,6 +3,7 @@ package hhplus.specialLecture.service;
 import hhplus.specialLecture.domain.Lecture;
 import hhplus.specialLecture.domain.LectureApplicationHistory;
 import hhplus.specialLecture.domain.LectureOption;
+import hhplus.specialLecture.exception.LectureException;
 import hhplus.specialLecture.service.repository.LectureApplicationHistoryRepository;
 import hhplus.specialLecture.service.repository.LectureOptionsRepository;
 import hhplus.specialLecture.service.repository.LectureRepository;
@@ -11,10 +12,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 @SpringBootTest
 class LectureServiceTest {
@@ -51,7 +55,7 @@ class LectureServiceTest {
         lectureOption1.setInstructorName("허재");
         lectureOption1.setLectureDt(LocalDateTime.of(2024, 7, 14, 0, 0, 0));
         lectureOption1.setMaxNum(30);
-        lectureOption1.setApplyNum(30);
+        lectureOption1.setApplyNum(28);
         lectureOption1.setLecture(lecture);
 
         lectureOption2.setInstructorName("하헌우");
@@ -138,5 +142,58 @@ class LectureServiceTest {
 
         //then
         Assertions.assertThat(all.size()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("동시성 테스트 - 동시에 신청하기")
+    @Transactional
+    public void testApplyAtTheSameTime() {
+        // given
+        Lecture lecture = new Lecture();
+        List<LectureOption> lectureOptions = new ArrayList<>();
+        setting(lecture, lectureOptions);
+
+        // when
+        CompletableFuture.allOf(
+                CompletableFuture.runAsync(() -> {
+                    LectureOption option1 = lectureOptionsRepository.getById(1L);
+                    if(option1.getMaxNum() == option1.getApplyNum()) {
+                        try {
+                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
+                        } catch (LectureException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        option1.setApplyNum(option1.getApplyNum() + 1);
+                    }
+                }),
+                CompletableFuture.runAsync(() -> {
+                    LectureOption option2 = lectureOptionsRepository.getById(1L);
+                    if(option2.getMaxNum() == option2.getApplyNum()) {
+                        try {
+                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
+                        } catch (LectureException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        option2.setApplyNum(option2.getApplyNum() + 1);
+                    }
+                }),
+                CompletableFuture.runAsync(() -> {
+                    LectureOption option3 = lectureOptionsRepository.getById(1L);
+                    if(option3.getMaxNum() == option3.getApplyNum()) {
+                        try {
+                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
+                        } catch (LectureException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        option3.setApplyNum(option3.getApplyNum() + 1);
+                    }
+                })
+        ).join();
+
+        // then
+
     }
 }

@@ -5,7 +5,6 @@ import hhplus.specialLecture.domain.LectureOption;
 import hhplus.specialLecture.exception.LectureException;
 import hhplus.specialLecture.service.repository.LectureApplicationHistoryRepository;
 import hhplus.specialLecture.service.repository.LectureOptionsRepository;
-import hhplus.specialLecture.service.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

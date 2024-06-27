@@ -1,6 +1,10 @@
 package hhplus.specialLecture.service.repository;
 
 import hhplus.specialLecture.domain.LectureApplicationHistory;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.QueryHints;
 
 public interface LectureApplicationHistoryRepository {
     /*
