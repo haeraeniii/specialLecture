@@ -2,7 +2,7 @@ package hhplus.specialLecture.repository;
 
 import hhplus.specialLecture.domain.Lecture;
 import hhplus.specialLecture.domain.LectureOption;
-import hhplus.specialLecture.service.LectureOptionsRepository;
+import hhplus.specialLecture.service.repository.LectureOptionsRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,8 @@
-package hhplus.specialLecture.repository;
+package hhplus.specialLecture.repository.impl;
 
 import hhplus.specialLecture.domain.Lecture;
-import hhplus.specialLecture.service.LectureRepository;
+import hhplus.specialLecture.repository.LectureJpaRepository;
+import hhplus.specialLecture.service.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

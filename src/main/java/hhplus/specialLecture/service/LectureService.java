@@ -3,6 +3,9 @@ package hhplus.specialLecture.service;
 import hhplus.specialLecture.domain.LectureApplicationHistory;
 import hhplus.specialLecture.domain.LectureOption;
 import hhplus.specialLecture.exception.LectureException;
+import hhplus.specialLecture.service.repository.LectureApplicationHistoryRepository;
+import hhplus.specialLecture.service.repository.LectureOptionsRepository;
+import hhplus.specialLecture.service.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,15 +23,15 @@ public class LectureService {
         3. 어떤 유저가 특강을 신청했는지 히스토리 저장
         4. 특강이 날짜별로 여러개 존재
         5. 특강 신청 전에 특강 목록을 조회해볼 수 있어야 함
-        6. 특강 신청자에회 성공여부를 알려줘야 함
+        6. 특강 신청자에게 성공여부를 알려줘야 함
      */
-    private final LectureRepository lectureRepository;
 
     private final LectureOptionsRepository lectureOptionsRepository;
 
     private final LectureApplicationHistoryRepository lectureApplicationHistoryRepo;
 
     //특강 신청
+    @Transactional
     public void lectureApply(Long memberId, Long lectureOptionId) throws LectureException {
 
         LectureOption option = lectureOptionsRepository.getById(lectureOptionId);

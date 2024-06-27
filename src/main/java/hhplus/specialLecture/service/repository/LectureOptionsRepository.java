@@ -1,4 +1,4 @@
-package hhplus.specialLecture.service;
+package hhplus.specialLecture.service.repository;
 
 import hhplus.specialLecture.domain.LectureOption;
 
