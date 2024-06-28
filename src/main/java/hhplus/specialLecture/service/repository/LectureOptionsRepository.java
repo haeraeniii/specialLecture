@@ -20,7 +20,5 @@ public interface LectureOptionsRepository {
 
     List<LectureOption> findAll ();
 
-    @Lock(LockModeType.PESSIMISTIC_READ)
-    @QueryHints({@QueryHint(name = "javax.persistence.lock.timeout", value = "10000")})
     LectureOption getById (Long id);
 }

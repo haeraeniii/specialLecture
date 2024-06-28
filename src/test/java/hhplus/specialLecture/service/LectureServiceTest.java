@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootTest
 class LectureServiceTest {
@@ -145,55 +149,41 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("동시성 테스트 - 동시에 신청하기")
+    @DisplayName("동시성 테스트 - 동시에 신청하기 (비관락)")
     @Transactional
-    public void testApplyAtTheSameTime() {
+    @Rollback(false)
+    public void testApplyAtTheSameTime() throws InterruptedException {
         // given
         Lecture lecture = new Lecture();
         List<LectureOption> lectureOptions = new ArrayList<>();
         setting(lecture, lectureOptions);
 
+        int threadCount = 3;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+
+        CountDownLatch latch = new CountDownLatch (threadCount);
+
+        LectureOption option = lectureOptionsRepository.getById(1L);
+
         // when
-        CompletableFuture.allOf(
-                CompletableFuture.runAsync(() -> {
-                    LectureOption option1 = lectureOptionsRepository.getById(1L);
-                    if(option1.getMaxNum() == option1.getApplyNum()) {
-                        try {
-                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
-                        } catch (LectureException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        option1.setApplyNum(option1.getApplyNum() + 1);
-                    }
-                }),
-                CompletableFuture.runAsync(() -> {
-                    LectureOption option2 = lectureOptionsRepository.getById(1L);
-                    if(option2.getMaxNum() == option2.getApplyNum()) {
-                        try {
-                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
-                        } catch (LectureException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        option2.setApplyNum(option2.getApplyNum() + 1);
-                    }
-                }),
-                CompletableFuture.runAsync(() -> {
-                    LectureOption option3 = lectureOptionsRepository.getById(1L);
-                    if(option3.getMaxNum() == option3.getApplyNum()) {
-                        try {
-                            throw new LectureException(LectureException.ExceptionType.OVER_MAX_NUM, "이미 인원 마감된 특강입니다.");
-                        } catch (LectureException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        option3.setApplyNum(option3.getApplyNum() + 1);
-                    }
-                })
-        ).join();
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    option.increaseEnrollCount();
+
+                } catch (LectureException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
 
         // then
+        LectureOption option1 = lectureOptionsRepository.getById(1L);
+        Assertions.assertThat(option1.getApplyNum()).isEqualTo(30);
 
     }
 }
